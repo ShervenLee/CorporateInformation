@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vojs.dao.UserMapper">
+
+    <insert id="insertUser" parameterType="com.vojs.bean.domain.User" useGeneratedKeys="true" keyProperty="id">
+        insert into user (
+          uuid,
+          email,
+          mobile,
+          password,
+          register_time,
+          update_time,
+          register_ip,
+          client_app_id,
+          nickname,
+          age,
+          gender,
+          portrait,
+          province,
+          city,
+          address,
+          id_card,
+          username,
+          parent_id,
+          salt
+        ) values (
+          #{_id, jdbcType=VARCHAR, javaType=String},
+          #{email, jdbcType=VARCHAR, javaType=String},
+          #{mobile, jdbcType=VARCHAR, javaType=String},
+          #{hashedPassword, jdbcType=VARCHAR, javaType=String},
+          #{registerTime, jdbcType=INTEGER, javaType=Long},
+          #{updateTime, jdbcType=INTEGER, javaType=Long},
+          #{regIp, jdbcType=VARCHAR, javaType=String},
+          #{clientAppId, jdbcType=VARCHAR, javaType=String},
+          #{nickname, jdbcType=VARCHAR, javaType=String},
+          #{age, jdbcType=INTEGER, javaType=Integer},
+          #{gender, jdbcType=INTEGER, javaType=String},
+          #{portrait, jdbcType=VARCHAR, javaType=String},
+          #{province, jdbcType=VARCHAR, javaType=String},
+          #{city, jdbcType=VARCHAR, javaType=String},
+          #{address, jdbcType=VARCHAR, javaType=String},
+          #{idCard, jdbcType=VARCHAR, javaType=String},
+          #{username, jdbcType=VARCHAR, javaType=String},
+          #{parentId, jdbcType=VARCHAR, javaType=String},
+          #{salt, jdbcType=VARCHAR, javaType=String}
+        )
+    </insert>
+
+    <sql id="getUserWhereSql">
+        <trim prefix="where" prefixOverrides="and | or">
+            <if test="_id != null">
+                uuid=#{_id}
+            </if>
+
+            <if test="email != null ">
+                and  email=#{email}
+            </if>
+
+            <if test="mobile != null">
+                and  mobile=#{mobile}
+            </if>
+
+            <if test="status != null">
+                and status=#{status}
+            </if>
+
+            <if test="regIp != null">
+                and register_ip=#{regIp}
+            </if>
+
+            <if test="clientAppId != null">
+                and client_app_id=#{clientAppId}
+            </if>
+
+            <if test="nickname != null">
+                and nickname=#{nickname}
+            </if>
+
+            <if test="gender != null">
+                and gender=#{gender}
+            </if>
+
+            <if test="province != null">
+                and  province=#{province}
+            </if>
+
+            <if test="city != null">
+                and  city=#{city}
+            </if>
+
+            <if test="idCard != null">
+                and  id_card=#{idCard}
+            </if>
+
+            <if test="username != null">
+                and  username=#{username}
+            </if>
+            <if test="parentId != null">
+                and  parent_id=#{parentId}
+            </if>
+
+        </trim>
+    </sql>
+
+    <select id="getUserCountByMobile" parameterType="String" resultType="Integer">
+        select count(*) from user where mobile=#{mobile} and delete_flag=0
+    </select>
+
+    <select id="getWXUnionList" parameterType="com.vojs.bean.domain.WXUnion" resultType="com.vojs.bean.domain.WXUnion">
+        select
+        id as id,
+        union_id as unionId,
+        user_id as userId,
+        delete_flag as deleteFlag
+        from wx_user_union
+
+        <trim prefix="where" prefixOverrides="and | or">
+            <if test="id != null">
+                id=#{id}
+            </if>
+
+            <if test="unionId != null ">
+                and  union_id=#{unionId}
+            </if>
+
+            <if test="userId != null">
+                and  user_id=#{userId}
+            </if>
+
+            and delete_flag=0
+        </trim>
+
+    </select>
+
+    <insert id="insertUnion" parameterType="com.vojs.bean.domain.WXUnion">
+        insert into wx_user_union(union_id, user_id) values (
+          #{unionId}, #{userId}
+        )
+    </insert>
+
+    <insert id="batchInsertUnion" parameterType="com.vojs.bean.domain.WXUnion">
+        <selectKey resultType="String" keyProperty="id" order="AFTER">
+            SELECT
+            LAST_INSERT_ID()
+        </selectKey>
+
+        insert into wx_user_union (union_id,user_id)
+        values
+        <foreach collection="list" item="item" index="index" separator="," >
+            (#{item.unionId},#{item.userId})
+        </foreach>
+    </insert>
+
+    <update id="updateUnionByUserIdForDelete" parameterType="String">
+        update wx_user_union set delete_flag=1 where user_id=#{userId}
+    </update>
+
+    <insert id="batchInsertWXOpenUser" parameterType="com.vojs.bean.domain.WXAccount">
+        <selectKey resultType="String" keyProperty="id" order="AFTER">
+            SELECT
+            LAST_INSERT_ID()
+        </selectKey>
+        insert into wx_user (union_id, wx_account, open_id, create_time, update_time) values
+        <foreach collection="list" item="item" index="index" separator="," >
+        (
+          #{item.wxUnionId}, #{item.wxPublicAccount}, #{item.wxOpenId}, now(), now()
+        )
+        </foreach>
+    </insert>
+    
+    <select id="getWxAccount" resultType="com.vojs.bean.domain.WXAccount">
+    	select * from wx_user where delete_flag = 0 and wx_account=#{wxPublicAccount} and union_id=#{wxUnionId}
+    </select>
+
+    <insert id="insertWXOpenUser" parameterType="com.vojs.bean.domain.WXAccount">
+      insert into  wx_user (
+        user_id,
+        wx_account,
+        open_id,
+        union_id,
+        create_time,
+        update_time
+      ) values (
+        #{userId},
+        #{wxPublicAccount, jdbcType=VARCHAR, javaType=String},
+        #{wxOpenId, jdbcType=VARCHAR, javaType=String},
+        #{wxUnionId, jdbcType=VARCHAR, javaType=String},
+        #{cTime},
+        #{uTime}
+      )
+    </insert>
+
+    <update id="updateWXOpenUserByUnionIdForDelete" parameterType="String">
+        update wx_user set delete_flag=1 , update_time=now() where union_id=#{unionId}
+    </update>
+
+    <update id="updateUser" parameterType="com.vojs.bean.domain.User">
+      update user
+
+      <trim prefix="SET" suffixOverrides=",">
+        <if test="email != null">email=#{email},</if>
+        <if test="mobile != null">mobile=#{mobile},</if>
+        <if test="hashedPassword != null and hashedPassword != ''">password=#{hashedPassword},</if>
+        <if test="status != null">status=#{status},</if>
+        <if test="registerTime != null">register_time=#{registerTime},</if>
+        <if test="updateTime != null">update_time=#{updateTime},</if>
+        <if test="regIp != null">register_ip=#{regIp},</if>
+        <if test="clientAppId != null">client_app_id=#{clientAppId},</if>
+        <if test="nickname != null">nickname=#{nickname},</if>
+        <if test="age != null">age=#{age},</if>
+        <if test="gender != null">gender=#{gender},</if>
+        <if test="portrait != null">portrait=#{portrait},</if>
+        <if test="province != null">province=#{province},</if>
+        <if test="city != null">city=#{city},</if>
+        <if test="address != null">address=#{address},</if>
+        <if test="idCard != null">id_card=#{idCard},</if>
+        <if test="username != null">username=#{username},</if>
+        <if test="parentId != null">parent_id=#{parentId},</if>
+        <if test="deleteFlag != null">delete_flag=#{deleteFlag},</if>
+      </trim>
+
+      where uuid=#{_id}
+    </update>
+
+    <resultMap id="userMap" type="com.vojs.bean.domain.User">
+        <result column="password" property="hashedPassword"/>
+        <result column="register_time" property="registerTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="register_ip" property="regIp"/>
+        <result column="id_card" property="idCard"/>
+    </resultMap>
+
+    <resultMap id="wxUserMap" type="com.vojs.bean.domain.WXAccount">
+        <result column="user_id" property="userId"/>
+        <result column="wx_account" property="wxPublicAccount"/>
+        <result column="open_id" property="wxOpenId"/>
+        <result column="union_id" property="wxUnionId"/>
+        <result column="create_time" property="cTime"/>
+        <result column="update_time" property="uTime"/>
+    </resultMap>
+
+    <select id="getUser" parameterType="com.vojs.bean.domain.User" resultMap="userMap">
+        select * from user <include refid="getUserWhereSql"/> and delete_flag=0 limit #{skip},#{limit}
+    </select>
+
+    <select id="getUserByUnion" parameterType="String" resultMap="userMap">
+      select a.* from user a, wx_user_union b where a.uuid=b.user_id and b.union_id=#{unionId} and a.delete_flag=0
+    </select>
+
+    <select id="getUserByUnionOpenIdAndAccount" resultMap="userMap">
+      select a.* from user a,wx_user_union b, wx_user c  where a.uuid=b.user_id and b.union_id=c.union_id
+      and b.union_id=#{unionId}
+      and c.open_id=#{openId}
+      and c.wx_account=#{publicAccount}
+      and a.delete_flag=0
+    </select>
+
+    <select id="getWXUserInfoByUnionId" resultType="com.vojs.bean.domain.WXAccount">
+        select union_id as wxUnionId, wx_account as wxPublicAccount, open_id as wxOpenId from wx_user
+         where  union_id=#{unionId} and delete_flag=0 order by id desc
+    </select>
+
+    <select id="getUserByQQ" resultMap="userMap">
+      select * from user
+    </select>
+    
+    <select id="getUserQQCount" resultType="Integer">
+        select count(*) from qq_user where user_id=#{userId} and qq_app_id=#{qqAppId} and open_id=#{openId}
+    </select>
+
+
+    <insert id="insertContact" parameterType="com.vojs.bean.domain.Contact" useGeneratedKeys="true" keyProperty="id">
+        insert into user_activity (
+          activity_no,
+          title,
+          type,
+          telephone,
+          user_id,
+          uuid,
+          activity_time
+        ) values (
+          #{activityCode},
+          #{title},
+          #{activityType},
+          #{contact},
+          #{uuid},
+          #{uuid},
+          #{datetime}
+        )
+    </insert>
+    
+    <select id="queryContact" parameterType="com.vojs.bean.domain.Contact" resultType="com.vojs.bean.domain.Contact">
+    	select
+    		id,
+            activity_no activityCode,
+            title ,
+            type activityType,
+            telephone contact,
+            uuid,
+            activity_time datetime
+        from user_activity 
+        where uuid = #{uuid} and type = #{activityType} and activity_no = #{activityCode} order by activity_time desc limit 1
+    </select>
+    
+    
+    <insert id="insertTag" parameterType="com.vojs.bean.domain.Tag"  useGeneratedKeys="true" keyProperty="id">
+      insert ignore into tag (
+      	uuid,
+        tag_name,
+        activity_no,
+        create_time,
+        update_time,
+        activity_type
+      ) values (
+      	#{uuid},
+        #{tagContent},
+        #{activityCode},
+        #{tagTime},
+        #{tagTime},
+        #{activityType}
+      )
+    </insert>
+
+    <insert id="insertLoginRecord" parameterType="String" >
+        insert into login_record (uuid,day_string, login_time) values(
+          #{uuid},DATE(now()), now()
+        )
+    </insert>
+
+    <select id="queryLoginByUuid" parameterType="String" resultType="Integer">
+        select count(*) from login_record u where u.uuid=#{uuid} and date(u.login_time) = date(NOW())
+    </select>
+
+</mapper>

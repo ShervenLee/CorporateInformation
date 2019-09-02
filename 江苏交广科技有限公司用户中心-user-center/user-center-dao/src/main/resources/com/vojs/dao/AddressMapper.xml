@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vojs.dao.AddressMapper">
+
+    <resultMap id="addressMap" type="com.vojs.bean.domain.Address">
+        <result column="user_uuid" property="uuid"/>
+        <result column="area" property="district"/>
+        <result column="is_default" property="isDefault"/>
+        <result column="is_default" property="isdefault"/>
+
+    </resultMap>
+
+    <select id="selectAddressList" parameterType="com.vojs.bean.domain.Address" resultMap="addressMap">
+      select * from user_address where user_uuid=#{uuid} or user_id=#{uuid}
+    </select>
+
+    <delete id="deleteAddress">
+        delete from user_address where id=#{id} and user_uuid=#{uuid}
+    </delete>
+
+    <update id="updateAddress" parameterType="com.vojs.bean.domain.Address">
+        update user_address
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="province != null">province=#{province},</if>
+            <if test="city != null">city=#{city},</if>
+            <if test="district!= null">area=#{district},</if>
+            <if test="detail != null">detail=#{detail},</if>
+            <if test="contact != null">contact=#{contact},</if>
+            <if test="mobile != null">mobile=#{mobile},</if>
+            <if test="postCode != null">post_code=#{postCode},</if>
+            <if test="isDefault != null">is_default=#{isDefault},</if>
+        </trim>
+
+        where user_uuid=#{uuid} and id=#{id}
+    </update>
+
+    <update id="setAddressUndefaultExceptId" parameterType="com.vojs.bean.domain.Address">
+        <![CDATA[
+         update user_address set is_default=0 where user_uuid=#{uuid} and id <>#{id}
+        ]]>
+    </update>
+
+    <insert id="insertAddress" parameterType="com.vojs.bean.domain.Address" useGeneratedKeys="true" keyProperty="id">
+        insert into user_address (
+          province,
+          city,
+          area,
+          detail,
+          contact,
+          mobile,
+          user_uuid,
+          post_code,
+          is_default
+        ) values (
+          #{province},
+          #{city},
+          #{district},
+          #{detail},
+          #{contact},
+          #{mobile},
+          #{uuid},
+          #{postCode},
+          #{isDefault}
+        )
+    </insert>
+
+</mapper>

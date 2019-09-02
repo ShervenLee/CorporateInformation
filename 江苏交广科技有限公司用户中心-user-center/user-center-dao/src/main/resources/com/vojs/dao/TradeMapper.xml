@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vojs.dao.TradeMapper">
+    <insert id="insertTrade" parameterType="com.vojs.bean.form.AddTradeForm" useGeneratedKeys="true" keyProperty="id">
+        insert into trade (
+          uuid,
+          nick_name,
+          sex,
+          age,
+          avatar,
+          union_id,
+          open_id,
+          weixin_account,
+          merchant_trade_id,
+          wx_trade_id,
+          pay_time,
+          pay_money,
+          pay_content,
+          trade_status,
+          pay_channel,
+          add_time,
+          trade_source,
+          thirdparty_trade_id
+        ) values (
+          #{uuid},
+          #{nickName},
+          #{sex},
+          #{age},
+          #{avatar},
+          #{unionId},
+          #{openid},
+          #{weixinAccount},
+          #{merchantTradeId},
+          #{wxTradeId},
+          #{payTime},
+          #{payMoney},
+          #{payContent},
+          #{tradeState},
+          #{payChannel},
+          #{addTime},
+          #{tradeSource},
+          #{thirdPartyTradeId}
+        )
+    </insert>
+
+    <update id="updateUserPayTimes" parameterType="com.vojs.bean.domain.PayTimes">
+      update statistics_user_pay_times set count=#{count} where uuid=#{uuid}
+    </update>
+
+    <select id="queryUserPayTimesByUuid" resultType="com.vojs.bean.domain.PayTimes" parameterType="String">
+      select id, uuid, statistics_time statisticsTime, count from statistics_user_pay_times where uuid=#{uuid} and date(DATE_ADD(statistics_time,interval 0 day))=date(DATE_ADD(NOW(),interval 0 day))
+    </select>
+
+    <insert id="insertUserPayTimes" parameterType="com.vojs.bean.domain.PayTimes">
+      insert into statistics_user_pay_times (uuid, statistics_time, count) values (
+        #{uuid},
+        #{statisticsTime},
+        #{count}
+      )
+    </insert>
+
+    <update id="updateLoginRecordPayState" parameterType="String">
+      update login_record set is_pay=1 where uuid=#{uuid} and day_string = date(DATE_ADD(NOW(),interval 0 day));
+    </update>
+
+</mapper>

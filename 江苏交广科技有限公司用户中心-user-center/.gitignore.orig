@@ -1,0 +1,10 @@
+<<<<<<< HEAD
+*target*
+*idea*
+*catalina*
+=======
+*.project
+*.classpath
+*target*
+*setting*
+>>>>>>> c64174a7f324e917805204694d60fe0e558552b1
