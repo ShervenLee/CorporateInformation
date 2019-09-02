@@ -1,0 +1,12 @@
+ with rostenum as (select a.nschoolid,a.sclasscode,count(a.id) as roster_num from ods.ods_bs_roster a where a.bvalid=1 and dtindate>=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd HH:mm:ss'),-730)  group by  a.nschoolid,a.sclasscode ),
+            serachnum as (  select b.schoolid ,b.classcode,count(b.classcode) as search_num from  test.BD_USER_XDFLOG b where b.schoolid is not null and b.classcode is not null group by b.schoolid ,b.classcode),  
+            classinfo as ( select g.sname  as area , c.nschoolid,c.scode,c.bVirtual, c.nMaxCount,d.sname as deptname ,e.sname as projectname ,f.sname as classtype ,c.dtbegindate as begindate ,c.nMergeState , case  c.nMergeState when 0 then 'normal' when 1 then 'merge' when 3 then 'cancel' end    as classstatus    ,
+                c.dtbegindate ,datediff( from_unixtime(unix_timestamp(),'yyyy-MM-dd HH:mm:ss'),c.dtbegindate)   as subdays  from ods.ods_bs_class c  inner join ods.ods_S_Dept d on c.nschoolid=d.NSCHOOLID   and  c.sdeptcode=d.sfcode inner join ods.ods_BS_Project e on c.nschoolid=e.nSchoolId and c.sprojectcode=e.sfcode inner join ods.ods_BS_ClassType f on c.nschoolid=f.nschoolid and c.sClassTypeCode=f.sfcode inner join ods.ods_bs_area g on c.nschoolid=g.nschoolid and c.sAreaCode=g.scode 
+                 where c.dtbegindate>=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd HH:mm:ss'),-365) and c.dtbegindate < from_unixtime(unix_timestamp(),'yyyy-MM-dd HH:mm:ss'))
+            
+select a1.nschoolid,a1.sclasscode,(a1.roster_num+0.0001)/(c1.nMaxCount+0.0001) as percent,a1.roster_num,
+       b1.search_num,--浏览记录表还没有导入，导入后放开注释就能用
+       c1.area,c1.bVirtual,c1.nMaxCount,c1.deptname,c1.projectname,c1.classtype,c1.begindate,c1.nMergeState,c1.classstatus,c1.subdays from rostenum a1 
+        left join serachnum b1 on a1.nschoolid=b1.schoolid and a1.sclasscode=b1.classcode --浏览记录表还没有导入，导入后放开注释就能用
+       inner join classinfo c1 on a1.nschoolid=c1.nschoolid and a1.sclasscode=c1.scode
+       order by begindate desc

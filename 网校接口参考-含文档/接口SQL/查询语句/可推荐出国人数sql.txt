@@ -1,0 +1,4 @@
+select a.nschoolid,a.month, a.coursecode, a.coursename,sum(predict) as predict 
+from  dw. dw_predecit_2018   a 
+where  nschoolid=1 and a.coursecode=20
+group by a.nschoolid, a.month, a.coursecode, a.coursename

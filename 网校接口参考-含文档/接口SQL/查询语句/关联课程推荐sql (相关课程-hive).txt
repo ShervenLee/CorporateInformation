@@ -1,0 +1,5 @@
+select a.Nschoolid,b.coursecode ,a.sstudentcode
+                   from ods.ods_bs_roster a 
+                   inner join ods.ods_bs_class b on a.nschoolid=b.nschoolid and a.sclasscode=b.scode
+                   where  a.bvalid=1 and a.sstudentcode='NC127730' and a.nschoolid='35'       -- 学生code  学校id                               
+                   order by a.dtindate desc limit 1
